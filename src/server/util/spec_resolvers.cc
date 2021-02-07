@@ -23,6 +23,7 @@ limitations under the License.
 
 // meta data
 DEFINE_string(deployment, "local", "deployment mode: local, distributed");
+DEFINE_bool(sync_crds, false, "Synchronize CRDs when persisting objects");
 DEFINE_string(etcd_endpoint, "http://127.0.0.1:2379", "endpoint of etcd");
 DEFINE_string(etcd_prefix, "vineyard", "path prefix in etcd");
 DEFINE_string(etcd_cmd, "", "path of etcd executable");
@@ -136,6 +137,7 @@ json RpcSpecResolver::resolve() const {
 json ServerSpecResolver::resolve() const {
   json spec;
   spec["deployment"] = FLAGS_deployment;
+  spec["sync_crds"] = FLAGS_sync_crds;
   spec["metastore_spec"] = Resolver::get("etcd").resolve();
   spec["bulkstore_spec"] = Resolver::get("bulkstore").resolve();
   spec["ipc_spec"] = Resolver::get("ipcserver").resolve();

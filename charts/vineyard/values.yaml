@@ -5,10 +5,10 @@
 replicaCount: 1
 
 image:
-  repository: libvineyard/vineyardd
-  pullPolicy: IfNotPresent
+  repository: registry-vpc.cn-hongkong.aliyuncs.com/libvineyard/vineyardd
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  tag: ubuntu
 
 imagePullSecrets: []
 nameOverride: ""

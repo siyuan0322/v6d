@@ -32,6 +32,8 @@ option(BUILD_VINEYARD_MIGRATION "Enable vineyard's object migration support" ON)
 
 option(BUILD_VINEYARD_TESTS "Generate make targets for vineyard tests" ON)
 option(BUILD_VINEYARD_TESTS_ALL "Include make targets for vineyard tests to ALL" OFF)
+option(BUILD_VINEYARD_BENCHMARKS "Generate make targets for vineyard benchmarks" ON)
+option(BUILD_VINEYARD_BENCHMARKS_ALL "Include make targets for vineyard benchmarks to ALL" OFF)
 option(BUILD_VINEYARD_COVERAGE "Build vineyard with coverage information, requires build with Debug" OFF)
 option(BUILD_VINEYARD_PROFILING "Build vineyard with profiling information" OFF)
 
@@ -500,6 +502,7 @@ if(BUILD_VINEYARD_PYTHON_BINDINGS)
 endif()
 
 add_custom_target(vineyard_tests)
+add_custom_target(vineyard_benchmarks)
 
 # add sub_directories
 if(BUILD_VINEYARD_BASIC)
@@ -561,6 +564,38 @@ if(BUILD_VINEYARD_TESTS)
         if(${T_NAME} STREQUAL "delete_test" OR ${T_NAME} STREQUAL "rpc_delete_test")
             target_compile_options(${T_NAME} PRIVATE "-fno-access-control")
         endif()
+    endforeach()
+endif()
+
+if(BUILD_VINEYARD_BENCHMARKS)
+    file(GLOB BENCH_FILES RELATIVE "${PROJECT_SOURCE_DIR}/benchmark"
+                                   "${PROJECT_SOURCE_DIR}/benchmark/*.cc"
+    )
+    foreach(f ${BENCH_FILES})
+        string(REGEX MATCH "^(.*)\\.[^.]*$" dummy ${f})
+        set(B_NAME ${CMAKE_MATCH_1})
+        message(STATUS "Found benchmark - " ${B_NAME})
+        if(BUILD_VINEYARD_BENCHMARKS_ALL)
+            add_executable(${B_NAME} benchmark/${B_NAME}.cc)
+        else()
+            add_executable(${B_NAME} EXCLUDE_FROM_ALL benchmark/${B_NAME}.cc)
+        endif()
+
+        target_link_libraries(${B_NAME} PRIVATE
+                              vineyard_client vineyard_basic vineyard_io vineyard_graph
+                              ${CPPNETLIB_LIBRARIES}
+        )
+        if(ARROW_SHARED_LIB)
+            target_link_libraries(${B_NAME} PRIVATE ${ARROW_SHARED_LIB})
+        else()
+            target_link_libraries(${B_NAME} PRIVATE ${ARROW_STATIC_LIB})
+        endif()
+
+        if(${LIBUNWIND_FOUND})
+            target_link_libraries(${B_NAME} PRIVATE ${LIBUNWIND_LIBRARIES})
+        endif()
+
+        add_dependencies(vineyard_benchmarks ${B_NAME})
     endforeach()
 endif()
 

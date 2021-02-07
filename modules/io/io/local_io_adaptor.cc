@@ -527,7 +527,15 @@ Status LocalIOAdaptor::Write(void* buffer, size_t size) {
     return Status::IOError("The file hasn't been opened in write mode: " +
                            location_);
   }
-  return Status::ArrowError(ofp_->Write(buffer, size) & ofp_->Flush());
+  return Status::ArrowError(ofp_->Write(buffer, size));
+}
+
+Status LocalIOAdaptor::Flush() {
+  if (ofp_ == nullptr) {
+    return Status::IOError("The file hasn't been opened in write mode: " +
+                           location_);
+  }
+  return Status::ArrowError(ofp_->Flush());
 }
 
 Status LocalIOAdaptor::Close() {
