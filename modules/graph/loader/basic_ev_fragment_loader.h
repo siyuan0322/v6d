@@ -107,8 +107,7 @@ class BasicEVFragmentLoader {
 
     std::vector<std::vector<std::shared_ptr<oid_array_t>>> oid_lists(
         vertex_label_num_);
-    LOG(INFO) << "PROGRESS--GRAPH-LOADING-VERTEX-SHUFFLE-0";
-    
+
     for (label_id_t v_label = 0; v_label < vertex_label_num_; ++v_label) {
       auto vertex_table = ordered_vertex_tables_[v_label];
       auto shuffle_procedure =
@@ -157,9 +156,7 @@ class BasicEVFragmentLoader {
       metadata->Append("type", "VERTEX");
       metadata->Append("retain_oid", std::to_string(retain_oid_));
       output_vertex_tables_[v_label] = table->ReplaceSchemaMetadata(metadata);
-      LOG(INFO) << "PROGRESS--GRAPH-LOADING-VERTEX-SHUFFLE-" << ((v_label + 1) / vertex_label_num_) * 100;
     }
-    LOG(INFO) << "PROGRESS--GRAPH-LOADING-VERTX-SEAL-0";
     ObjectID new_vm_id = InvalidObjectID();
     if (vm_id == InvalidObjectID()) {
       BasicArrowVertexMapBuilder<internal_oid_t, vid_t> vm_builder(
@@ -184,7 +181,6 @@ class BasicEVFragmentLoader {
         new_vm_id = old_vm_ptr->AddVertices(client_, oid_lists_map);
       }
     }
-    LOG(INFO) << "PROGRESS--GRAPH-LOADING-VERTX-SEAL-100";
     vm_ptr_ = std::dynamic_pointer_cast<ArrowVertexMap<internal_oid_t, vid_t>>(
         client_.GetObject(new_vm_id));
 
@@ -317,7 +313,6 @@ class BasicEVFragmentLoader {
 
     vineyard::IdParser<vid_t> id_parser;
     id_parser.Init(comm_spec_.fnum(), vertex_label_num);
-    LOG(INFO) << "PROGRESS--GRAPH-LOADING-EDGE-SHUFFLE-0";
     output_edge_tables_.resize(edge_label_num_);
     for (label_id_t e_label = 0; e_label < edge_label_num_; ++e_label) {
       auto shuffle_procedure =
@@ -350,7 +345,6 @@ class BasicEVFragmentLoader {
       metadata->Append("type", "EDGE");
       output_edge_tables_[e_label] = table->ReplaceSchemaMetadata(metadata);
       ordered_edge_tables_[e_label].clear();
-      LOG(INFO) << "PROGRESS--GRAPH-LOADING-EDGE-SHUFFLE-" << ((e_label + 1) / edge_label_num_) * 100;
     }
     ordered_edge_tables_.clear();
     return {};
