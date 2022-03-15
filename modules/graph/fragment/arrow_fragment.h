@@ -102,14 +102,16 @@ class ArrowFragmentBase : public vineyard::Object {
       const std::map<
           label_id_t,
           std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>
-          columns) = 0;
+          columns,
+      bool replace = false) = 0;
 
   virtual boost::leaf::result<vineyard::ObjectID> AddVertexColumns(
       vineyard::Client& client,
       const std::map<label_id_t,
                      std::vector<std::pair<
                          std::string, std::shared_ptr<arrow::ChunkedArray>>>>
-          columns) {
+          columns,
+      bool replace = false) {
     VINEYARD_ASSERT(false, "Not implemented");
     return vineyard::InvalidObjectID();
   }
@@ -2148,7 +2150,7 @@ class ArrowFragment
           label_id_t,
           std::vector<std::pair<std::string, std::shared_ptr<ArrayType>>>>
           columns,
-      replace = false) {
+      bool replace = false) {
     vineyard::ObjectMeta old_meta, new_meta;
     VINEYARD_CHECK_OK(client.GetMetaData(this->id_, old_meta));
 
@@ -2252,8 +2254,9 @@ class ArrowFragment
       const std::map<
           label_id_t,
           std::vector<std::pair<std::string, std::shared_ptr<arrow::Array>>>>
-          columns) override {
-    return AddVertexColumnsImpl<arrow::Array>(client, columns);
+          columns,
+      bool replace = false) override {
+    return AddVertexColumnsImpl<arrow::Array>(client, columns, replace);
   }
 
   boost::leaf::result<vineyard::ObjectID> AddVertexColumns(
@@ -2261,8 +2264,9 @@ class ArrowFragment
       const std::map<label_id_t,
                      std::vector<std::pair<
                          std::string, std::shared_ptr<arrow::ChunkedArray>>>>
-          columns) override {
-    return AddVertexColumnsImpl<arrow::ChunkedArray>(client, columns);
+          columns,
+      bool replace = false) override {
+    return AddVertexColumnsImpl<arrow::ChunkedArray>(client, columns, replace);
   }
 
   boost::leaf::result<vineyard::ObjectID> Project(
