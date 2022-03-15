@@ -2147,7 +2147,8 @@ class ArrowFragment
       const std::map<
           label_id_t,
           std::vector<std::pair<std::string, std::shared_ptr<ArrayType>>>>
-          columns) {
+          columns,
+      replace = false) {
     vineyard::ObjectMeta old_meta, new_meta;
     VINEYARD_CHECK_OK(client.GetMetaData(this->id_, old_meta));
 
@@ -2162,13 +2163,25 @@ class ArrowFragment
     new_meta.AddKeyValue("edge_label_num", edge_label_num_);
 
     auto schema = schema_;
+
+    /// If replace == true, invalidate all previous properties that have new
+    /// columns.
+    if (replace) {
+      for (auto& pair : columns) {
+        auto label_id = pair.first;
+        auto& entry = schema.GetMutableEntry(pair.first, "VERTEX");
+        for (size_t i = 0; i < entry.props_.size(); ++i) {
+          entry.InvalidateProperty(i);
+        }
+      }
+    }
+
     for (label_id_t i = 0; i < vertex_label_num_; ++i) {
       std::string table_name = generate_name_with_suffix("vertex_tables", i);
       if (columns.find(i) != columns.end()) {
         std::shared_ptr<vineyard::Table> old_table =
             std::make_shared<vineyard::Table>();
         old_table->Construct(old_meta.GetMemberMeta(table_name));
-        prop_id_t old_prop_num = old_table->num_columns();
         vineyard::TableExtender extender(client, old_table);
         auto& vec = columns.at(i);
         for (auto& pair : vec) {
@@ -2183,6 +2196,7 @@ class ArrowFragment
         auto label =
             old_meta.GetKeyValue("vertex_label_name_" + std::to_string(i));
         auto& entry = schema.GetMutableEntry(label, "VERTEX");
+        prop_id_t old_prop_num = old_table->num_columns();
         prop_id_t prop_num = arrow_table->num_columns();
         for (prop_id_t j = old_prop_num; j < prop_num; ++j) {
           entry.AddProperty(arrow_table->field(j)->name(),
